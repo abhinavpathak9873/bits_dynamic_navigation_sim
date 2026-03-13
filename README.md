@@ -12,7 +12,7 @@ You will need the following installed on your machine before starting:
 
 - [Docker](https://docs.docker.com/engine/install/)
 - [Docker Compose](https://docs.docker.com/compose/install/) (comes bundled with Docker Desktop; on Linux install separately)
-- (Optional) [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) — only needed if you want GPU passthrough
+- (Optional) [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) --> only needed if you want GPU passthrough
 
 If you are on Linux and plan to use the Gazebo graphical interface, you also need to allow Docker to connect to your display. Run this once in your terminal before starting the container:
 
