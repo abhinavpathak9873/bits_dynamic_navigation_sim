@@ -1,15 +1,9 @@
 FROM nvidia/cuda:11.3.1-base-ubuntu20.04
 
-# ──────────────────────────────────────────────
-# Prevent interactive prompts during apt installs
-# ──────────────────────────────────────────────
 ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /home
 
-# ──────────────────────────────────────────────
-# Timezone
-# ──────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
         tzdata \
     && echo 'Etc/UTC' > /etc/timezone \
@@ -17,9 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && dpkg-reconfigure -f noninteractive tzdata \
     && rm -rf /var/lib/apt/lists/*
 
-# ──────────────────────────────────────────────
-# Core utilities (install BEFORE anything that needs curl/wget)
-# ──────────────────────────────────────────────
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
         wget \
@@ -33,16 +25,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
     && rm -rf /var/lib/apt/lists/*
 
-# ──────────────────────────────────────────────
-# Locale
-# ──────────────────────────────────────────────
+
 RUN locale-gen en_US en_US.UTF-8 \
     && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 
-# ──────────────────────────────────────────────
-# Python 3.8 + pip
-# ──────────────────────────────────────────────
 RUN add-apt-repository ppa:deadsnakes/ppa \
     && apt-get update && apt-get install -y --no-install-recommends \
         python3.8 \
@@ -53,12 +40,9 @@ RUN add-apt-repository ppa:deadsnakes/ppa \
     && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip first to avoid old-pip quirks
+
 RUN pip3 install --upgrade pip
 
-# ──────────────────────────────────────────────
-# Python packages (numpy/matplotlib/etc.)
-# ──────────────────────────────────────────────
 RUN pip3 install \
         numpy==1.24.3 \
         matplotlib==3.7.1 \
@@ -66,16 +50,13 @@ RUN pip3 install \
         pyqtgraph==0.12.4 \
         PyQt5==5.14.1
 
-# PyTorch 1.10 for CUDA 11.3  (kept on separate layer – large download)
 RUN pip3 install \
         torch==1.10.0+cu113 \
         torchvision==0.11.1+cu113 \
         torchaudio==0.10.0+cu113 \
         -f https://download.pytorch.org/whl/cu113/torch_stable.html
 
-# ──────────────────────────────────────────────
-# Gazebo 11  (proper OSRF repo, no piped-shell-script)
-# ──────────────────────────────────────────────
+
 RUN curl -sSL https://packages.osrfoundation.org/gazebo.gpg \
         -o /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] \
@@ -86,7 +67,6 @@ RUN curl -sSL https://packages.osrfoundation.org/gazebo.gpg \
         libgazebo11-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Minimal Gazebo models (avoids the 3 GB database auto-download)
 ENV GAZEBO_MODEL_DATABASE_URI=""
 RUN mkdir -p /root/.gazebo/models/ground_plane /root/.gazebo/models/sun
 
@@ -99,9 +79,7 @@ RUN wget -q https://raw.githubusercontent.com/osrf/gazebo_models/master/ground_p
     && wget -q https://raw.githubusercontent.com/osrf/gazebo_models/master/sun/model.config \
         -O /root/.gazebo/models/sun/model.config
 
-# ──────────────────────────────────────────────
-# ROS 2 Foxy
-# ──────────────────────────────────────────────
+
 RUN add-apt-repository universe \
     && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
         -o /usr/share/keyrings/ros-archive-keyring.gpg \
@@ -116,18 +94,10 @@ RUN add-apt-repository universe \
         python3-rosdep \
     && rm -rf /var/lib/apt/lists/*
 
-# Initialise rosdep
-RUN rosdep init && rosdep update
 
-# ──────────────────────────────────────────────
-# Application workspace
-# ──────────────────────────────────────────────
+RUN rosdep init && rosdep update
 WORKDIR /home/turtlebot3_drlnav
 
-# ──────────────────────────────────────────────
-# Environment – written to ~/.bashrc
-# All dollar signs that should survive to runtime are escaped (\$)
-# ──────────────────────────────────────────────
 RUN echo '\n\
 # ── ROS 2 Foxy ──────────────────────────────\n\
 source /opt/ros/foxy/setup.bash\n\
@@ -150,7 +120,6 @@ export TURTLEBOT3_MODEL=burger\n\
 export GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:$DRLNAV_BASE_PATH/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_drl_world/obstacle_plugin/lib\n\
 ' >> /root/.bashrc
 
-# Keep DEBIAN_FRONTEND non-interactive only during build
 ENV DEBIAN_FRONTEND=
 
 CMD ["bash"]
