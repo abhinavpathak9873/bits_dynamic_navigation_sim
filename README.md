@@ -1,4 +1,4 @@
-This is a dockerized version of the [turtlebot3_drlnav](https://github.com/tomasvr/turtlebot3_drlnav) project, built to make getting the simulation up and running as straightforward as possible without having to manually deal with ROS installation, dependency conflicts, or environment setup.
+This is a dockerized version of the [turtlebot3_drlnav](https://github.com/tomasvr/turtlebot3_drlnav) project, put together to support robotics research at BITS Pilani Dubai. The goal is to let you get the simulation running without having to deal with ROS installation, dependency conflicts, or environment configuration from scratch.
 
 The container ships with ROS 2 Foxy and Gazebo 11. Both have reached end-of-life status, but they remain functional for the purposes of this project. At some point in the future it would be worth migrating to a supported distribution, but that is out of scope for now.
 
