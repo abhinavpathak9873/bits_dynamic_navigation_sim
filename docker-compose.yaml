@@ -41,16 +41,16 @@ services:
 
 
   
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities:
-    #             - gpu
-    #             - graphics
-    #             - compute
-    #             - utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+                - graphics
+                - compute
+                - utility
 
     restart: unless-stopped
