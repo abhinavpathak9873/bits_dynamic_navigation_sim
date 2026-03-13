@@ -1,0 +1,86 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  docker-compose.yml  –  TurtleBot3 DRL Nav
+#
+#  Prerequisites on the host before running:
+#    1.  Allow the container to use your X display:
+#            xhost +local:root
+#    2.  NVIDIA Container Toolkit (for GPU passthrough):
+#            https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
+#
+#  Start:   docker compose up -d
+#  Shell:   docker compose exec turtlebot3 bash
+#  Stop:    docker compose down
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  turtlebot3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: turtlebot3_drlnav:latest
+    container_name: turtlebot3_drlnav
+
+    # ── Always land in the workspace on entry ───────────────────────────────
+    working_dir: /home/turtlebot3_drlnav
+
+    # ── Interactive shell ───────────────────────────────────────────────────
+    stdin_open: true
+    tty: true
+
+    # ── Host networking (required for ROS 2 DDS discovery) ──────────────────
+    network_mode: host
+    ipc: host
+
+    # ── Environment variables ───────────────────────────────────────────────
+    environment:
+      # Display passthrough
+      - DISPLAY=${DISPLAY:-:0}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/root/.Xauthority
+
+      # ROS 2
+      - ROS_DOMAIN_ID=1
+
+      # NVIDIA (if GPU available)
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+
+      # Mesa / OpenGL — fixes the libGL i915 errors for Intel GPUs
+      # If Gazebo opens but shows a black screen, flip LIBGL_ALWAYS_SOFTWARE to 1
+      - LIBGL_ALWAYS_SOFTWARE=0
+      - MESA_GL_VERSION_OVERRIDE=3.3
+
+    # ── Device passthrough ──────────────────────────────────────────────────
+    devices:
+      # Intel / AMD GPU DRI nodes — needed for hardware OpenGL in Gazebo
+      - /dev/dri:/dev/dri
+
+    # ── Volume mounts ───────────────────────────────────────────────────────
+    volumes:
+      # Display passthrough
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro
+
+      # Persistent workspace — mounts ./turtlebot3_drlnav (next to this file)
+      # into the container at /home/turtlebot3_drlnav
+      - ./turtlebot3_drlnav:/home/turtlebot3_drlnav
+
+    # ── NVIDIA GPU passthrough ──────────────────────────────────────────────
+    #     Remove this entire 'deploy' block if you have no NVIDIA GPU.
+
+
+    
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities:
+    #             - gpu
+    #             - graphics
+    #             - compute
+    #             - utility
+
+    # ── Restart policy ──────────────────────────────────────────────────────
+    restart: unless-stopped
